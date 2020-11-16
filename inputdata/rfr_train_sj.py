@@ -1,4 +1,4 @@
-#Import libraries
+#Import libraries for model creation and registration
 from azureml.core import Run
 import argparse
 import pandas as pd
@@ -9,6 +9,10 @@ from sklearn.metrics import mean_absolute_error
 import joblib
 import warnings
 warnings.filterwarnings('ignore')
+
+#Import libraries for model explanation
+from azureml.interpret import ExplanationClient
+from interpret.ext.blackbox import TabularExplainer
 
 #Set run context
 run=Run.get_context()
@@ -44,9 +48,19 @@ mae=mean_absolute_error(y_hat,y_test)
 print('SJ MAE: ',mae)
 run.log('SJ MAE: ',np.float(mae))
 
-# Save the trained model
+#Save the trained model
 os.makedirs(model_folder, exist_ok=True)
 output_path = model_folder + "/sj_rfr_model.pkl"
 joblib.dump(value=rfr, filename=output_path)
+
+#Get the explanation
+features=df_sj.columns
+target='total_cases'
+explainer = TabularExplainer(rfr, x_train, features=features)
+explanation = explainer.explain_global(x_test)
+
+#Get an Explanation Client and upload the explanation
+explain_client = ExplanationClient.from_run(run)
+explain_client.upload_model_explanation(explanation, comment='Tabular Explanation')
 
 run.complete()

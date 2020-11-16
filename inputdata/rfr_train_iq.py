@@ -10,6 +10,10 @@ import joblib
 import warnings
 warnings.filterwarnings('ignore')
 
+#Import libraries for model explanation
+from azureml.interpret import ExplanationClient
+from interpret.ext.blackbox import TabularExplainer
+
 #Set run context
 run=Run.get_context()
 
@@ -48,5 +52,15 @@ run.log('IQ MAE: ',np.float(mae))
 os.makedirs(model_folder, exist_ok=True)
 output_path = model_folder + "/iq_rfr_model.pkl"
 joblib.dump(value=rfr, filename=output_path)
+
+#Get the explanation
+features=df_iq.columns
+target='total_cases'
+explainer = TabularExplainer(rfr, x_train, features=features)
+explanation = explainer.explain_global(x_test)
+
+#Get an Explanation Client and upload the explanation
+explain_client = ExplanationClient.from_run(run)
+explain_client.upload_model_explanation(explanation, comment='Tabular Explanation')
 
 run.complete()
