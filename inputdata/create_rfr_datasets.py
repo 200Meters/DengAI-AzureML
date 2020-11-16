@@ -96,16 +96,12 @@ def create_lag_features(df,lag,end_col=0):
 def prep_for_model(city,lookback):
     #get train and test for sj or iq
     if city=='sj':
-        #df=pd.read_csv('inputdata/train_all_sj.csv')
-        #df_h=pd.read_csv('inputdata/holdout_all_sj.csv')
         train_all_sj_ds = ws.datasets.get('dengue-train-all-sj-ds')
         holdout_all_sj_ds = ws.datasets.get('dengue-holdout-all-sj-ds')
         df=train_all_sj_ds.to_pandas_dataframe()
         df_h=holdout_all_sj_ds.to_pandas_dataframe()
         df_h['total_cases']=0
     elif city=='iq':
-        #df=pd.read_csv('inputdata/train_all_iq.csv')
-        #df_h=pd.read_csv('inputdata/holdout_all_iq.csv')
         train_all_iq_ds = ws.datasets.get('dengue-train-all-iq-ds')
         holdout_all_iq_ds = ws.datasets.get('dengue-holdout-all-iq-ds')
         df=train_all_iq_ds.to_pandas_dataframe()
@@ -132,7 +128,7 @@ def prep_for_model(city,lookback):
 
     #Break out the label data so it does not get scaled and the drop the values for holdout since they are all 0
     y=df_all_lag['total_cases']
-    y=y[:df.shape[0]]
+    y=y[:df.shape[0]-lookback]
     df_all_lag.drop(columns=['total_cases'],inplace=True)
 
     #scale features using desired scaler
@@ -140,8 +136,8 @@ def prep_for_model(city,lookback):
     df_all_lag=scaler.fit_transform(df_all_lag)
 
     #break out the holdout file from the input file
-    np_df=df_all_lag[:df.shape[0],:]
-    np_df_h=df_all_lag[df.shape[0]:,:]
+    np_df=df_all_lag[:df.shape[0]-lookback,:]
+    np_df_h=df_all_lag[df.shape[0]-lookback:,:]
 
     return np_df, np_df_h, y
 
@@ -177,5 +173,49 @@ df_iq_holdout.to_csv(test_iq_output_path,index=False)
 
 y_iq_output_path = os.path.join(output_folder, 'y_iq.csv')
 df_y_iq.to_csv(y_iq_output_path,index=False)
+
+### Create reusable datasets for the scaled holdout data. These will be needed to make predictions once the models are deployed
+default_ds.upload_files(files=[test_sj_output_path],
+                    target_path='dengueAI/inputdata',
+                    overwrite=True, 
+                    show_progress=True)
+
+#Create a tabular dataset from the path on the datastore for the file
+tab_test_sj_rfr_ds = Dataset.Tabular.from_delimited_files(path=(default_ds, 'dengueAI/inputdata/holdout_sj_scaled.csv'))
+
+
+# Register the tabular dataset
+try:
+    tab_test_sj_rfr_ds = tab_test_sj_rfr_ds.register(workspace=ws, 
+                            name='test-sj-rfr-ds',
+                            description='Holdout data scaled for SJ RFR model',
+                            tags = {'format':'CSV'},
+                            create_new_version=True)
+    print('Dataset registered.')
+except Exception as ex:
+    print(ex)
+
+    
+
+default_ds.upload_files(files=[test_iq_output_path],
+                    target_path='dengueAI/inputdata',
+                    overwrite=True, 
+                    show_progress=True)
+
+#Create a tabular dataset from the path on the datastore for the file
+tab_test_iq_rfr_ds = Dataset.Tabular.from_delimited_files(path=(default_ds, 'dengueAI/inputdata/holdout_iq_scaled.csv'))
+
+# Register the tabular dataset
+try:
+    tab_test_iq_rfr_ds = tab_test_iq_rfr_ds.register(workspace=ws, 
+                            name='test-iq-rfr-ds',
+                            description='Holdout data scaled for IQ RFR model',
+                            tags = {'format':'CSV'},
+                            create_new_version=True)
+    print('Dataset registered.')
+except Exception as ex:
+    print(ex)
+
+
 
 run.complete

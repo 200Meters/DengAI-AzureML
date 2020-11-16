@@ -13,7 +13,7 @@ warnings.filterwarnings('ignore')
 #Set run context
 run=Run.get_context()
 
-# Get PipelineData argument
+#Get PipelineData argument
 parser = argparse.ArgumentParser()
 parser.add_argument('--folder', type=str, dest='folder')
 parser.add_argument('--model_folder',type=str,dest='model_folder')
@@ -25,9 +25,6 @@ model_folder= args.model_folder
 df_sj=pd.read_csv(data_folder+'/train_sj_scaled.csv')
 df_sj_h=pd.read_csv(data_folder+'/holdout_sj_scaled.csv')
 df_sj_y=pd.read_csv(data_folder+'/y_sj.csv')
-
-#get the datasets for the city
-#np_sj,np_sj_h,y_sj=prep_for_model(city='sj',lookback=50)
 
 #split the training set into train and test
 x_train, x_test, y_train, y_test = train_test_split(df_sj, df_sj_y, test_size=0.30, random_state=0)

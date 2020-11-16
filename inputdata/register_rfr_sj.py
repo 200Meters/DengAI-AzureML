@@ -10,12 +10,12 @@ args = parser.parse_args()
 model_folder = args.model_folder
 print('Model folder',str(model_folder))
 
-# Get the experiment run context
+#Get the experiment run context
 run = Run.get_context()
 
-# load the model
-print("Loading model from " + model_folder)
-model_file = model_folder + "/sj_rfr_model.pkl"
+#load and register the model
+print('Loading model from ' + model_folder)
+model_file = model_folder + '/sj_rfr_model.pkl'
 model = joblib.load(model_file)
 
 Model.register(workspace=run.experiment.workspace,

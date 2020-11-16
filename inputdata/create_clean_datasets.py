@@ -104,11 +104,6 @@ df_all.to_csv(train_output_path,index=False)
 test_output_path = os.path.join(output_folder, 'dengue_holdout_all.csv')
 df_holdout.to_csv(test_output_path,index=False)
 
-#Create the input and holdout files with engineered features onto local filestore
-#df_all.to_csv('inputdata/dengue_train_all.csv',index=False)
-#df_holdout.to_csv('inputdata/dengue_holdout_all.csv',index=False)
-
-
 ##Create datasets for the raw training and holdout/test file
 #Get the default data store
 ws=run.experiment.workspace

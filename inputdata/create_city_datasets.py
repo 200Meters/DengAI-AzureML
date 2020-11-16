@@ -3,16 +3,6 @@ from azureml.core import Workspace,Datastore,Dataset,Run
 import pandas as pd
 import numpy as np
 
-
-#Get the raw file datasets
-#ws=Workspace.get(name='Azure-ML-WS',subscription_id='fd2d8de8-17e1-4976-9906-fdde487edd5f',resource_group='AzureML-Learning')
-#ds_a=Dataset.get_by_name(ws,'dengue-features-train-all-ds',version='latest')
-#ds_h=Dataset.get_by_name(ws,'dengue-features-holdout-all-ds',version='latest')
-
-#Create dataframes for each dataset, train and holdout
-#df_a=ds_a.to_pandas_dataframe()
-#df_h=ds_h.to_pandas_dataframe()
-
 #Set run context
 run=Run.get_context()
 
@@ -31,12 +21,6 @@ df_sj=df_a[df_a['city']=='sj']
 df_sj_h=df_h[df_h['city']=='sj']
 df_iq=df_a[df_a['city']=='iq']
 df_iq_h=df_h[df_h['city']=='iq']
-
-#Create files for each to persist them to local storage
-#df_sj.to_csv('inputdata/train_all_sj.csv',index=False)
-#df_sj_h.to_csv('inputdata/holdout_all_sj.csv',index=False)
-#df_iq.to_csv('inputdata/train_all_iq.csv',index=False)
-#df_iq_h.to_csv('inputdata/holdout_all_iq.csv',index=False)
 
 # Save prepped data to the PipelineData location
 os.makedirs(output_folder, exist_ok=True)
@@ -127,7 +111,7 @@ tab_holdout_all_iq_ds = Dataset.Tabular.from_delimited_files(path=(default_ds, '
 
 # Register the tabular dataset
 try:
-    tab_holdout_all_sj_ds = tab_holdout_all_sj_ds.register(workspace=ws, 
+    tab_holdout_all_iq_ds = tab_holdout_all_iq_ds.register(workspace=ws, 
                             name='dengue-holdout-all-iq-ds',
                             description='Lagged dengue feature test/holdout data for iq',
                             tags = {'format':'CSV'},
@@ -135,3 +119,5 @@ try:
     print('Dataset registered.')
 except Exception as ex:
     print(ex)
+
+run.complete()
